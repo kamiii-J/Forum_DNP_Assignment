@@ -26,18 +26,36 @@ public class HttpUserService : IUserService
         })!;
     }
 
-    public Task<UserDto> UpdateUserAsync(UpdateUserDto request)
+    public async Task UpdateUserAsync(int id, UpdateUserDto request)
     {
-        throw new NotImplementedException();
+        HttpResponseMessage httpResponse = await httpClient.PutAsJsonAsync($"users/{id}", request);
+        
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            string response = await httpResponse.Content.ReadAsStringAsync();
+            throw new Exception(response);
+        }
     }
 
-    public Task<UserDto> GetUserAsync(int id)
+    public async Task<IEnumerable<UserDto>> GetUserAsync(int? id = null)
     {
-        throw new NotImplementedException();
-    }
+        string uri = "user";
+        if (id.HasValue)
+        {
+            uri += $"?id={id.Value}";
+        }
 
-    public Task<UserDto> DeleteUserAsync(int id)
-    {
-        throw new NotImplementedException();
+        HttpResponseMessage httpResponse = await httpClient.GetAsync(uri);
+        string response = await httpResponse.Content.ReadAsStringAsync();
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            throw new Exception(response);
+        }
+
+        return JsonSerializer.Deserialize<IEnumerable<UserDto>>(response, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        })!;
     }
 }

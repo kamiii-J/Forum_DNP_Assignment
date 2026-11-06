@@ -1,0 +1,116 @@
+@page "/posts/{id:int}"
+@rendermode InteractiveServer
+@using ApiContracts
+@using BlazorApp.Components.Services
+@inject IPostService postService
+@inject ICommentService commentService
+
+<PageTitle>View Post</PageTitle>
+
+@if (post == null)
+{
+    <p><em>Loading post...</em></p>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">@post.Title</h2>
+            <h6 class="card-subtitle mb-2 text-muted">Author ID: @post.UserId</h6>
+            <p class="card-text mt-3">@post.Body</p>
+        </div>
+    </div>
+
+    <h4>Comments</h4>
+    
+    @if (comments == null)
+    {
+        <p><em>Loading comments...</em></p>
+    }
+    else if (!comments.Any())
+    {
+        <p>No comments yet.</p>
+    }
+    else
+    {
+        <ul class="list-group mb-4">
+            @foreach (var c in comments)
+            {
+                <li class="list-group-item">
+                    @c.Body <br/>
+                    <small class="text-muted">User ID: @c.UserId</small>
+                </li>
+            }
+        </ul>
+    }
+
+    <h5>Add a Comment</h5>
+    <div class="form-group mb-2">
+        <textarea @bind="newCommentBody" class="form-control" rows="3" placeholder="Write your comment here..."></textarea>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <button class="btn btn-success" @onclick="SubmitComment">Post Comment</button>
+}
+
+@code {
+    [Parameter]
+    public int id { get; set; } 
+
+    private PostDto? post;
+    private IEnumerable<CommentDto>? comments;
+    
+    private string newCommentBody = string.Empty;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            post = await postService.GetSingleAsync(id);
+            comments = await commentService.GetCommentsAsync(postId: id);
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+        }
+    }
+
+    private async Task SubmitComment()
+    {
+        errorMessage = string.Empty;
+        if (string.IsNullOrWhiteSpace(newCommentBody))
+        {
+            errorMessage = "Comment cannot be empty.";
+            return;
+        }
+
+        try
+        {
+            CreateCommentDto dto = new CreateCommentDto
+            {
+                PostId = id,
+                Body = newCommentBody,
+                UserId = 1
+            };
+
+            await commentService.CreateAsync(dto);
+            
+            newCommentBody = string.Empty;
+            await LoadDataAsync(); 
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+        }
+    }
+}

@@ -1,0 +1,52 @@
+@page "/posts"
+@rendermode InteractiveServer
+@using ApiContracts
+@using BlazorApp.Components.Services
+@inject IPostService postService
+@inject NavigationManager navMgr
+
+<PageTitle>Posts Overview</PageTitle>
+
+<h3>Forum Posts</h3>
+
+@if (posts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (!posts.Any())
+{
+    <p>No posts to view.</p>
+}
+else
+{
+    <ul class="list-group">
+        @foreach (var post in posts)
+        {
+            <li class="list-group-item">
+                <!-- Clicking the title routes the user to the specific post page -->
+                <a href="/posts/@post.Id" style="font-size: 1.2rem; font-weight: bold;">
+                    @post.Title
+                </a>
+                <div class="text-muted">Author ID: @post.UserId</div>
+            </li>
+        }
+    </ul>
+}
+
+@code {
+    private IEnumerable<PostDto>? posts;
+    private string errorMessage = string.Empty;
+
+    
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            posts = await postService.GetManyAsync();
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+        }
+    }
+}
