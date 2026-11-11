@@ -9,3 +9,4 @@ IPostRepository postRepository = new PostFileRepository();
 
 CliApp cliApp = new CliApp(userRepository, commentRepository, postRepository);
 await cliApp.StartAsync();
+

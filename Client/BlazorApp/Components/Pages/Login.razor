@@ -1,0 +1,54 @@
+@page "/Login"
+@rendermode InteractiveServer
+@using BlazorApp.Components.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider authProvider
+@inject NavigationManager navMgr
+
+<PageTitle>Login</PageTitle>
+
+<div class="card mx-auto mt-5" style="max-width: 400px;">
+    <div class="card-body">
+        <h3 class="card-title text-center mb-4">Log In</h3>
+
+        <div class="form-group mb-3">
+            <label>Username</label>
+            <input type="text" @bind="userName" class="form-control" />
+        </div>
+
+        <div class="form-group mb-4">
+            <label>Password</label>
+            <input type="password" @bind="password" class="form-control" />
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <button class="btn btn-primary w-100" @onclick="SubmitLogin">Login</button>
+    </div>
+</div>
+
+@code {
+    private string userName = string.Empty;
+    private string password = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private async Task SubmitLogin()
+    {
+        errorMessage = string.Empty;
+        
+        try
+        {
+            var simpleAuthProvider = (SimpleAuthProvider)authProvider;
+            await simpleAuthProvider.LoginAsync(userName, password);
+            
+            navMgr.NavigateTo("/");
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+        }
+    }
+}
